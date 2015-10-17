@@ -65,6 +65,10 @@ RUN echo "directory=/srv/ooi2" >> supervisord.conf
 RUN echo "autostart=true" >> supervisord.conf
 RUN echo "autorestart=true" >> supervisord.conf
 RUN echo "user=www-data" >> supervisord.conf
+RUN echo "[program:nginx]" >> supervisord.conf
+RUN echo "command=/usr/sbin/nginx" >> supervisord.conf
+RUN echo "stdout_events_enabled=true" >> supervisord.conf
+RUN echo "stderr_events_enabled=true" >> supervisord.conf
 
 #Prepend nginx.conf no NOT run as daemon
 WORKDIR /etc/nginx
