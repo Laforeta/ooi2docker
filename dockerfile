@@ -55,20 +55,19 @@ RUN wget http://203.104.209.102/kcs/resources/image/world/203_104_248_135_l.png
 RUN wget http://203.104.209.102/kcs/resources/image/world/203_104_248_135_s.png
 RUN wget http://203.104.209.102/kcs/mainD2.swf
 
-#Build supervisor config file from scratch with random OOI_SECRET
+#Configure supervisor for docker
 WORKDIR /etc/supervisor
 RUN sed  '/\[supervisord\]/a nodaemon=true' supervisord.conf
-RUN echo "[program:ooi2]" >> supervisord.conf
-RUN echo "command=/srv/ooi2/bin/python3 /srv/ooi2/ooi.py" >> supervisord.conf
-RUN echo "environment=OOI_SECRET=$(awk -v min=1000000000 -v max=9999999999 'BEGIN{srand(); print int(min+rand()*(max-min+1))}')" >> supervisord.conf
-RUN echo "directory=/srv/ooi2" >> supervisord.conf
-RUN echo "autostart=true" >> supervisord.conf
-RUN echo "autorestart=true" >> supervisord.conf
-RUN echo "user=www-data" >> supervisord.conf
-RUN echo "[program:nginx]" >> supervisord.conf
-RUN echo "command=/usr/sbin/nginx" >> supervisord.conf
-RUN echo "stdout_events_enabled=true" >> supervisord.conf
-RUN echo "stderr_events_enabled=true" >> supervisord.conf
+
+#Copy nginx.conf and build ooi.conf from scratch with random OOI_SECRET
+WORKDIR /etc/supervisor/conf.d
+COPY nginx.conf /etc/supervisor/conf.d/ooi_nginx.conf
+RUN echo "[program:ooi2]" > ooi.conf
+RUN echo "environment=OOI_SECRET=$(awk -v min=1000000000 -v max=9999999999 'BEGIN{srand(); print int(min+rand()*(max-min+1))}')" >> ooi.conf
+RUN echo "directory=/srv/ooi2" >> ooi.conf
+RUN echo "autostart=true" >> ooi.conf
+RUN echo "autorestart=true" >> ooi.conf
+RUN echo "user=www-data" >> ooi.conf
 
 #Prepend nginx.conf no NOT run as daemon
 WORKDIR /etc/nginx
@@ -81,9 +80,6 @@ COPY ooi2.conf /etc/nginx/sites-enabled/ooi2.conf
 
 #Issue a self-signed TLS certificate
 RUN openssl req -x509 -newkey rsa:2048 -keyout /srv/key.pem -out /srv/cert.pem -days 180 -nodes -subj /C=NA/ST=Nowhere/L=Nowhere/O=OnlineObjectsIntegration/OU=InstallationEphemeral/CN=OOI.system/emailAddress=private.use.only@destroy.after.use
-
-#Restart nginx
-RUN service nginx restart
 
 #Expose external ports
 EXPOSE 80 443
