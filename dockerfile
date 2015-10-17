@@ -61,8 +61,9 @@ RUN sed  '/\[supervisord\]/a nodaemon=true' supervisord.conf
 
 #Copy nginx.conf and build ooi.conf from scratch with random OOI_SECRET
 WORKDIR /etc/supervisor/conf.d
-COPY nginx.conf /etc/supervisor/conf.d/ooi_nginx.conf
+COPY ooi_nginx.conf /etc/supervisor/conf.d/ooi_nginx.conf
 RUN echo "[program:ooi2]" > ooi.conf
+RUN echo "command=/srv/ooi2/bin/python3 /srv/ooi2/ooi.py" >> ooi.conf
 RUN echo "environment=OOI_SECRET=$(awk -v min=1000000000 -v max=9999999999 'BEGIN{srand(); print int(min+rand()*(max-min+1))}')" >> ooi.conf
 RUN echo "directory=/srv/ooi2" >> ooi.conf
 RUN echo "autostart=true" >> ooi.conf
