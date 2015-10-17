@@ -56,8 +56,8 @@ RUN wget http://203.104.209.102/kcs/resources/image/world/203_104_248_135_s.png
 RUN wget http://203.104.209.102/kcs/mainD2.swf
 
 #Configure supervisor for docker
-WORKDIR /etc/supervisor
-RUN sed  '/\[supervisord\]/a nodaemon=true' supervisord.conf
+WORKDIR /etc
+COPY supervisor.conf /etc/supervisor.conf
 
 #Copy nginx.conf and build ooi.conf from scratch with random OOI_SECRET
 WORKDIR /etc/supervisor/conf.d
@@ -86,4 +86,4 @@ RUN openssl req -x509 -newkey rsa:2048 -keyout /srv/key.pem -out /srv/cert.pem -
 EXPOSE 80 443
 
 #Start supervisor
-CMD ["/usr/bin/supervisord"]
+CMD /usr/bin/supervisord -c /etc/supervisor.conf
